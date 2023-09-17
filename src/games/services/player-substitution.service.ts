@@ -107,6 +107,10 @@ export class PlayerSubstitutionService implements OnModuleInit {
           .exec(),
       );
 
+      if (newGame.events.filter(evnt => evnt.event === GameEventType.substituteRequested).length > 3) {
+        await this.gamesService.forceEnd(game._id);
+      }
+
       this.logger.debug(
         `player ${player.name} taking part in game #${game.number} is marked as 'waiting for substitute'`,
       );

@@ -168,6 +168,9 @@ export class ServemeTfService implements GameServerProvider, OnModuleInit {
         port: reservation.server.port,
         latitude: reservation.server.latitude,
         longitude: reservation.server.longitude,
+        sdrIp: reservation.server.sdr_ip,
+        sdrPort: reservation.server.sdr_port,
+        sdrTvPort: reservation.server.sdr_tv_port,
       },
     });
     return id;

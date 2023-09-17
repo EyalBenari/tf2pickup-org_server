@@ -25,6 +25,15 @@ class ServemeTfServer {
 
   @Prop()
   longitude!: number;
+
+  @Prop({})
+  sdrIp!: string;
+
+  @Prop()
+  sdrPort!: string;
+
+  @Prop()
+  sdrTvPort!: string;
 }
 
 const servemeTfServerSchema = SchemaFactory.createForClass(ServemeTfServer);

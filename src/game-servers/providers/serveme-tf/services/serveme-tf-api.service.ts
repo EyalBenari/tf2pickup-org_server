@@ -25,6 +25,9 @@ interface ServemeTfServerOption {
   ip: string;
   port: string;
   ip_and_port: string;
+  sdr_ip: string | null;
+  sdr_port: string | null;
+  sdr_tv_port: string | null;
   sdr: boolean;
   latitude: number;
   longitude: number;
