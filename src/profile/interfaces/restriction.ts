@@ -2,6 +2,7 @@ import { Tf2ClassName } from '@/shared/models/tf2-class-name';
 
 export enum RestrictionReason {
   accountNeedsReview = 'account needs review',
+  playerSkillTooLow = 'player skill too low',
 }
 
 export interface Restriction {

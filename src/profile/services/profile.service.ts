@@ -13,6 +13,7 @@ import { map, filter } from 'rxjs';
 import { ProfileDto } from '../dto/profile.dto';
 import { Restriction, RestrictionReason } from '../interfaces/restriction';
 import { serialize } from '@/shared/serialize';
+import { Tf2ClassName } from '@/shared/models/tf2-class-name';
 
 const playersEqual = (a: Player, b: Player) => {
   return a.name === b.name;
@@ -114,11 +115,27 @@ export class ProfileService implements OnModuleInit {
   private async getPlayerRestrictions(player: Player): Promise<Restriction[]> {
     const restrictions: Restriction[] = [];
 
-    if (
-      !player.skill &&
-      (await this.configurationService.get<boolean>(
+    if (player.skill) {
+      const minimumSkillThresholds = await this.configurationService.get<
+        Partial<Record<Tf2ClassName, number>>
+      >('queue.minimum_skill_thresholds');
+      if (Object.keys(minimumSkillThresholds).length > 0) {
+        const restrictedClasses = this.queueConfig.classes.filter(
+          (gameClass) =>
+            (player.skill?.get(gameClass.name) || 0) <
+            (minimumSkillThresholds[gameClass.name] || 0),
+        );
+        if (restrictedClasses.length) {
+          restrictions.push({
+            reason: RestrictionReason.playerSkillTooLow,
+            gameClasses: restrictedClasses.map((gameClass) => gameClass.name),
+          });
+        }
+      }
+    } else if (
+      await this.configurationService.get<boolean>(
         'queue.deny_players_with_no_skill_assigned',
-      ))
+      )
     ) {
       restrictions.push({
         reason: RestrictionReason.accountNeedsReview,

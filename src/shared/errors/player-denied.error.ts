@@ -5,6 +5,7 @@ export enum DenyReason {
   noSkillAssigned = 'player has no skill assigned',
   playerIsBanned = 'player is banned',
   playerIsInvolvedInGame = 'player is involved in a game',
+  playerSkillTooLow = 'player skill is lower than threshold'
 }
 
 export class PlayerDeniedError extends Error {

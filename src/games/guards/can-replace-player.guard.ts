@@ -5,9 +5,14 @@ import {
   DenyReason,
   PlayerDeniedError,
 } from '@/shared/errors/player-denied.error';
+import { Tf2ClassName } from '@/shared/models/tf2-class-name';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+import { GamesService } from '../services/games.service';
+import { Types } from 'mongoose';
+import { GameId } from '../game-id';
+import { SlotStatus } from '../models/slot-status';
 
 @Injectable()
 export class CanReplacePlayerGuard implements CanActivate {
@@ -15,6 +20,7 @@ export class CanReplacePlayerGuard implements CanActivate {
     private readonly playersService: PlayersService,
     private readonly configurationService: ConfigurationService,
     private readonly playerBansService: PlayerBansService,
+    private readonly gamesService: GamesService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,11 +34,38 @@ export class CanReplacePlayerGuard implements CanActivate {
       throw new PlayerDeniedError(player, DenyReason.playerHasNotAcceptedRules);
     }
 
-    if (
-      !player.skill &&
-      (await this.configurationService.get<boolean>(
+    if (player.skill) {
+      const data = context.switchToWs().getData() as {
+        gameId: string;
+        replaceeId: string;
+      };
+
+      const game = await this.gamesService.getById(
+        new Types.ObjectId(data.gameId) as GameId,
+      );
+      const slot = game.slots.find(
+        (slot) =>
+          slot.status === SlotStatus.waitingForSubstitute &&
+          slot.player.equals(data.replaceeId),
+      );
+
+      if (slot) {
+        const minimumSkillThresholds = await this.configurationService.get<
+          Partial<Record<Tf2ClassName, number>>
+        >('queue.minimum_skill_thresholds');
+
+        const minimumClassThreshold = minimumSkillThresholds[slot.gameClass];
+        if (
+          (player.skill?.get(slot.gameClass) || 0) <
+          (minimumClassThreshold || 0)
+        ) {
+          throw new PlayerDeniedError(player, DenyReason.playerSkillTooLow);
+        }
+      }
+    } else if (
+      await this.configurationService.get<boolean>(
         'queue.deny_players_with_no_skill_assigned',
-      ))
+      )
     ) {
       throw new PlayerDeniedError(player, DenyReason.noSkillAssigned);
     }

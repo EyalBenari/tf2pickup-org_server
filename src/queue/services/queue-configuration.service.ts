@@ -15,6 +15,21 @@ export class QueueConfigurationService implements OnModuleInit {
         false,
       ),
       configurationEntry(
+        'queue.minimum_skill_thresholds',
+        z.object({
+          scout: z.number().min(0),
+          soldier: z.number().min(0),
+          pyro: z.number().min(0),
+          demoman: z.number().min(0),
+          heavy: z.number().min(0),
+          engineer: z.number().min(0),
+          medic: z.number().min(0),
+          sniper: z.number().min(0),
+          spy: z.number().min(0),
+        }).partial(),
+        {},
+      ),
+      configurationEntry(
         'queue.ready_up_timeout',
         z.number().positive(),
         40 * 1000,
